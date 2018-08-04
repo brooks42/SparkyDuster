@@ -15,7 +15,7 @@ app.get('/', (req, res) => res.send('I am listening'));
 
 // on a post we'll want to use the CLI to compile and upload the posted code to an arduino on the robot
 app.post('/', (req, res) => { 
-    console.log(`request: ${JSON.stringify(req.headers)} ${JSON.stringify(req.body)}`);
+    console.log(`request: ${JSON.stringify(req.headers)} ${JSON.stringify(req.body, undefined, '\t')}`);
     res.send();
 
     // parse the github PN and decide whether we need to push or not
