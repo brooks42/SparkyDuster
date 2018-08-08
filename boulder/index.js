@@ -1,6 +1,7 @@
-
+'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
+const shell = require('shelljs');
 
 const app = express();
 
@@ -14,6 +15,12 @@ const githubSignature = "f4NHb86nALZyZoEsATuR";
 // in the future this might send information like build # etc
 app.get('/', (req, res) => res.send('I am listening'));
 
+// when someone posts to /update we should do the git commands to pull etc, and restart the server
+app.post('/update', (req, res) => {
+    pullRepo();
+    restartServer();
+});
+
 // on a post we'll want to use the CLI to compile and upload the posted code to an arduino on the robot
 app.post('/', (req, res) => { 
     console.log(`request: ${JSON.stringify(req.headers)} ${JSON.stringify(req.body, undefined, '\t')}`);
@@ -25,10 +32,21 @@ app.post('/', (req, res) => {
         console.log("Should pull the repo and rebuild...");
 
         // do a bunch of stuff
+
     }
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+// pull the git repo (this should override this code :O )
+function pullRepo() {
+    
+}
+
+// do the CLI to restart this server, might be a little gnarly at first
+function restartServer() {
+    
+}
 
 /**
  * PushNotification class for determining if we trust the PN and whether we should pull or not.
