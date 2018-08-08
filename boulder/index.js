@@ -19,6 +19,17 @@ app.get('/', (req, res) => res.send('I am listening'));
 app.post('/update', (req, res) => {
     pullRepo();
     restartServer();
+    res.send();
+});
+
+app.post('/pull', (req, res) => {
+    pullRepo();
+    res.send();
+});
+
+app.post('/restart', (req, res) => {
+    restartServer();
+    res.send();
 });
 
 // on a post we'll want to use the CLI to compile and upload the posted code to an arduino on the robot
@@ -40,11 +51,13 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 // pull the git repo (this should override this code :O )
 function pullRepo() {
-    
+    console.log("pulling repo...");
+    shell.exec('git pull');
 }
 
 // do the CLI to restart this server, might be a little gnarly at first
 function restartServer() {
+    console.log("restarting server...");
     
 }
 
