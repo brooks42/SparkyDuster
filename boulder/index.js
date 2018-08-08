@@ -1,3 +1,4 @@
+
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -28,3 +29,34 @@ app.post('/', (req, res) => {
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+/**
+ * PushNotification class for determining if we trust the PN and whether we should pull or not.
+ */
+class PushNotification {
+
+    /**
+     * 
+     * @param {Object} obj a JSON object representing the body of the push notification
+     */
+    constructor(obj) {
+        console.log(`New PushNotification created with body ${JSON.stringify(obj, undefined, '\t')}`);
+        this.object = obj;
+    }
+
+    /**
+     * 
+     */
+    isTrustedPN() {
+        // TODO: returns true for now
+        return true;
+    }
+
+    /**
+     * 
+     */
+    shouldPullRepoAndRebuild() {
+        // for now I just return true, maybe filter on releases or a commit message keyword or something?
+        return true;
+    }
+}
