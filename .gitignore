@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+*.elf
+
+# mac
+.DS_Store
+
+# Arduino
+*.hex
