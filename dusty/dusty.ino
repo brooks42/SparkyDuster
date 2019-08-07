@@ -5,6 +5,7 @@
 
 #include <Arduino.h>
 #include <stdio.h>
+#include <Servo.h>
 #include "IRremote.h"
 #include "motor.h"
 
@@ -27,12 +28,19 @@ const int REMOTE_CONTROLLER_PIN = 12;
 #define IN4 9   // Right wheel forward
 #define carSpeed 150	// initial speed of car >=0 to <=255
 
+// the rangefinder's pins
+#define ECHO A0
+#define TRIGGER A1
+
 // remote_control_t remoteControl(REMOTE_CONTROLLER_PIN);
 IRrecv irrecv(REMOTE_CONTROLLER_PIN);  
 decode_results results;
 
 motor_t rightMotor(ENB, IN1, IN2);
 motor_t leftMotor(ENA, IN3, IN4);   
+
+Servo rangefinderNeck;
+int servoPlacement = 45;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -43,6 +51,11 @@ void setup() {
     rightMotor.stop();
     
     irrecv.enableIRIn();  // Start receiving
+
+    rangefinderNeck.attach(4);
+
+    pinMode(TRIGGER, OUTPUT);
+    pinMode(ECHO, INPUT);
 }
 
 void forward() {
@@ -75,7 +88,6 @@ void loop() {
     
     if (irrecv.decode(&results)) { 
         unsigned long val = results.value;
-        Serial.println(val);
 
         // TODO: need a state maachine
         // in the final codebase the raspi will handle the state machine component but for now just shove it in the arduino
@@ -109,6 +121,13 @@ void loop() {
         }
         
         irrecv.resume();      // Receive the next value
-        delay(100);
     }
+
+    // if (servoPlacement == 45) {
+    //     servoPlacement = 135;
+    // } else {
+    //     servoPlacement = 45;
+    // }
+    // rangefinderNeck.write(servoPlacement);
+    // delay(100);
 }
