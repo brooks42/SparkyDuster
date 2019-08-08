@@ -29,8 +29,8 @@ const int REMOTE_CONTROLLER_PIN = 12;
 #define carSpeed 150	// initial speed of car >=0 to <=255
 
 // the rangefinder's pins
-#define ECHO A0
-#define TRIGGER A1
+#define ECHO 2
+#define TRIGGER 3
 
 // remote_control_t remoteControl(REMOTE_CONTROLLER_PIN);
 IRrecv irrecv(REMOTE_CONTROLLER_PIN);  
@@ -89,35 +89,23 @@ void loop() {
     if (irrecv.decode(&results)) { 
         unsigned long val = results.value;
 
-        // TODO: need a state maachine
-        // in the final codebase the raspi will handle the state machine component but for now just shove it in the arduino
-        if (val == FORWARD_BUTTON) {
-            Serial.println("forward");
-            stop();
-            forward();
-        }
-
-        if (val == BACK_BUTTON) {
-            Serial.println("reverse");
-            stop();
-            reverse();
-        }
-
-        if (val == LEFT_BUTTON) {
-            Serial.println("left");
-            stop();
-            left();
-        }
-        
-        if (val == RIGHT_BUTTON) {
-            Serial.println("right");
-            stop();
-            right();
-        }
-
-        if (val == OK_BUTTON) {
-            Serial.println("stop");
-            stop();
+        switch (val) {
+            case FORWARD_BUTTON:
+                moveForward();
+                break;
+            case BACK_BUTTON:
+                moveBackward();
+                break;
+            case LEFT_BUTTON:
+                turnLeft();
+                break;
+            case RIGHT_BUTTON:
+                turnRight();
+                break;
+            case OK_BUTTON:
+                Serial.println("stop");
+                stop();
+                break;
         }
         
         irrecv.resume();      // Receive the next value
@@ -130,4 +118,28 @@ void loop() {
     // }
     // rangefinderNeck.write(servoPlacement);
     // delay(100);
+}
+
+void moveForward() {
+    Serial.println("forward");
+    stop();
+    forward();
+}
+
+void moveBackward() {
+    Serial.println("reverse");
+    stop();
+    reverse();
+}
+
+void turnLeft() {
+    Serial.println("left");
+    stop();
+    left();
+}
+
+void turnRight() {
+    Serial.println("right");
+    stop();
+    right();
 }
