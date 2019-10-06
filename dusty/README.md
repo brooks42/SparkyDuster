@@ -21,3 +21,11 @@ arduino-cli upload -p <the serial port> -b arduino:avr:uno .
 ```
 
 To tail logs you can do `screen <serial port>`.
+
+To run a single command to compile and upload do:
+
+```
+SERIAL=$(arduino-cli board list | sed -n 's/.*\(\/dev\/cu.*[a-z]*[0-9]\).*/\1/p')
+arduino-cli compile --fqbn arduino:avr:uno . ;
+arduino-cli upload -p $SERIAL -b arduino:avr:uno .
+```

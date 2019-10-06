@@ -8,8 +8,11 @@
 #include <Servo.h>
 #include "IRremote.h"
 #include "motor.h"
+#include "clock.h"
 
-const int REMOTE_CONTROLLER_PIN = 12;
+#define DEBUG 1
+
+#define REMOTE_CONTROLLER_PIN 12
 
 #define FORWARD_BUTTON 5316027		  // FORWARD
 #define BACK_BUTTON 2747854299	// BACK
@@ -17,6 +20,9 @@ const int REMOTE_CONTROLLER_PIN = 12;
 #define RIGHT_BUTTON 553536955		// RIGHT
 #define OK_BUTTON 3622325019	// OK
 #define CONTINUE 4294967295 // repeated press registered
+
+// job Id for 
+#define CHECK_DISTANCE_JOB_ID 1
 
 /*define channel enable output pins*/
 #define ENA 5	  // Left  wheel speed
@@ -29,8 +35,8 @@ const int REMOTE_CONTROLLER_PIN = 12;
 #define carSpeed 150	// initial speed of car >=0 to <=255
 
 // the rangefinder's pins
-#define ECHO 2
-#define TRIGGER 3
+#define TRIGGER 2
+#define ECHO 3
 
 // remote_control_t remoteControl(REMOTE_CONTROLLER_PIN);
 IRrecv irrecv(REMOTE_CONTROLLER_PIN);  
@@ -41,6 +47,8 @@ motor_t leftMotor(ENA, IN3, IN4);
 
 Servo rangefinderNeck;
 int servoPlacement = 45;
+
+clock_t clock;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -56,6 +64,8 @@ void setup() {
 
     pinMode(TRIGGER, OUTPUT);
     pinMode(ECHO, INPUT);
+
+    clock.registerEvent(CHECK_DISTANCE_JOB_ID, 100, &pingDistanceJobCallback);
 }
 
 void forward() {
@@ -111,17 +121,58 @@ void loop() {
         irrecv.resume();      // Receive the next value
     }
 
-    // if (servoPlacement == 45) {
-    //     servoPlacement = 135;
-    // } else {
-    //     servoPlacement = 45;
-    // }
-    // rangefinderNeck.write(servoPlacement);
-    // delay(100);
+    clock.update();
+}
+
+// this is the job that runs at 1hz, it measures the distance in front of the robot and 
+// then takes an appropriate action
+void pingDistanceJobCallback(unsigned long currentTime) {
+    float distance = pingDistance();
+
+#ifdef DEBUG
+    Serial.print("ping: ");
+    Serial.println(distance);
+#endif
+
+    // for now just stop the car if we see an obstacle
+    if (distance < 10) { 
+        stop();
+    } 
+
+    // reschedule this job
+    clock.registerEvent(CHECK_DISTANCE_JOB_ID, 100, &pingDistanceJobCallback);
+}
+
+float pingDistance() {
+
+    // power the TRIGGER pin for 10 microseconds to cause the rangefinder to pulse
+    digitalWrite(TRIGGER, LOW); 
+    delayMicroseconds(2);
+ 
+    digitalWrite(TRIGGER, HIGH);
+    delayMicroseconds(10);
+
+    digitalWrite(TRIGGER, LOW);
+  
+    float duration = pulseIn(ECHO, HIGH);
+
+    // 0.0344 is just a multiplier for transforming ping time to distance
+    return (duration / 2) * 0.0344; 
+}
+
+void lookLeft() {
+
+}
+
+void lookRight() {
+
 }
 
 void moveForward() {
+    
+#ifdef DEBUG
     Serial.println("forward");
+#endif
     stop();
     forward();
 }
@@ -142,4 +193,10 @@ void turnRight() {
     Serial.println("right");
     stop();
     right();
+}
+
+void print(const char *str) {
+#ifdef DEBUG
+    Serial.println(str);
+#endif
 }
