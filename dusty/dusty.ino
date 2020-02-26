@@ -50,6 +50,14 @@ int servoPlacement = 45;
 
 clock_t clock;
 
+// rangefinder-related variables
+volatile bool rangefinderTriggered = false;
+volatile bool rangefinderEchoed = false;
+unsigned long rangefinderPulseInMicros = 0l;
+volatile unsigned long rangefinderPulseDoneMicros = 0l;
+
+unsigned long lastMillis = 0l;
+
 // the setup function runs once when you press reset or power the board
 void setup() {
     Serial.begin(9600);
@@ -63,9 +71,12 @@ void setup() {
     rangefinderNeck.attach(4);
 
     pinMode(TRIGGER, OUTPUT);
-    pinMode(ECHO, INPUT);
+    pinMode(ECHO, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(ECHO), pingReturn_ISR, CHANGE);
 
     clock.registerEvent(CHECK_DISTANCE_JOB_ID, 100, &pingDistanceJobCallback);
+
+    forward();
 }
 
 void forward() {
@@ -121,29 +132,21 @@ void loop() {
         irrecv.resume();      // Receive the next value
     }
 
+    rangefinderLogicUpdate();
     clock.update();
 }
 
-// this is the job that runs at 1hz, it measures the distance in front of the robot and 
-// then takes an appropriate action
+// this is the job that runs at 10hz, just pings the rangefinder and then reschedules itself
 void pingDistanceJobCallback(unsigned long currentTime) {
-    float distance = pingDistance();
 
-#ifdef DEBUG
-    Serial.print("ping: ");
-    Serial.println(distance);
-#endif
-
-    // for now just stop the car if we see an obstacle
-    if (distance < 10) { 
-        stop();
-    } 
+    triggerRangefinder();
 
     // reschedule this job
     clock.registerEvent(CHECK_DISTANCE_JOB_ID, 100, &pingDistanceJobCallback);
 }
 
-float pingDistance() {
+// triggers the rangefinder
+void triggerRangefinder() {
 
     // power the TRIGGER pin for 10 microseconds to cause the rangefinder to pulse
     digitalWrite(TRIGGER, LOW); 
@@ -153,11 +156,58 @@ float pingDistance() {
     delayMicroseconds(10);
 
     digitalWrite(TRIGGER, LOW);
-  
-    float duration = pulseIn(ECHO, HIGH);
 
-    // 0.0344 is just a multiplier for transforming ping time to distance
-    return (duration / 2) * 0.0344; 
+    rangefinderTriggered = true;
+}
+
+// the rangefinder raises echo based on the time spent so we actually want to read the time echo is high, not the time from ping to echo
+void pingReturn_ISR() {
+    if (rangefinderTriggered) {
+        switch (digitalRead(ECHO)) {
+            case HIGH:                                      
+                rangefinderPulseInMicros = micros();                                 
+                break;
+            
+            case LOW:                    
+                rangefinderTriggered = false;
+                rangefinderEchoed = true;
+                rangefinderPulseDoneMicros = micros();
+                break;
+        }
+    }
+}
+
+void rangefinderLogicUpdate() {
+
+    if (rangefinderEchoed) {
+
+        long duration = rangefinderPulseDoneMicros - rangefinderPulseInMicros;
+
+        if (duration < 0) {
+            return;
+        }
+
+        float obstacleDistance = duration / 58;
+
+        // 0.0344 is just a multiplier for transforming ping time to distance
+        // float obstacleDistance = (duration / 2) * 0.0344; 
+        
+    #ifdef DEBUG
+        unsigned long currentMillis = millis();
+        Serial.print("distance: (");
+        Serial.print(currentMillis - lastMillis);
+        Serial.print(") ");
+        Serial.println(obstacleDistance);
+        lastMillis = currentMillis;
+    #endif
+
+        // for now just stop the car if we see an obstacle
+        if (obstacleDistance < 30) { 
+            stop();
+        } 
+    } 
+
+    rangefinderEchoed = false;
 }
 
 void lookLeft() {
