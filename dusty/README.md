@@ -4,7 +4,11 @@ Dusty is the nickname for the arduino codebase of the SparkyDuster project.
 
 ### Execution
 
-Plug in the Arduino and install `arduino-cli`. Now you can do 
+Plug in the Arduino and install `arduino-cli`. https://arduino.github.io/arduino-cli/getting-started/
+
+Don't forget to run `arduino-cli core update-index` and the other necessary commands.
+
+Now you can do 
 
 ```
 arduino-cli board list
