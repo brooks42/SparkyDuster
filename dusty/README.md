@@ -4,9 +4,18 @@ Dusty is the nickname for the arduino codebase of the SparkyDuster project.
 
 ### Execution
 
-Plug in the Arduino and install `arduino-cli`. https://arduino.github.io/arduino-cli/getting-started/
+Plug in the Arduino and install `arduino-cli`. This is the command line tool used to build and upload source to the Arduino.
 
-Don't forget to run `arduino-cli core update-index` and the other necessary commands.
+https://arduino.github.io/arduino-cli/getting-started/
+
+Don't forget to run 
+
+```
+arduino-cli core update-index
+arduino-cli core install arduino:samd
+```
+
+and the other necessary commands.
 
 Now you can do 
 
